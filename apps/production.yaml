@@ -1,0 +1,25 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: production
+  namespace: flux-system
+spec:
+  interval: 30s
+  ref:
+    branch: master
+  url: https://github.com/someshprajapati/flux-production
+Flag --validation has been deprecated, this arg is no longer used, all resources are validated using server-side apply dry-run
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: production
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: production
