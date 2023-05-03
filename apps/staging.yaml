@@ -9,7 +9,6 @@ spec:
   ref:
     branch: master
   url: https://github.com/someshprajapati/flux-staging
-Flag --validation has been deprecated, this arg is no longer used, all resources are validated using server-side apply dry-run
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
