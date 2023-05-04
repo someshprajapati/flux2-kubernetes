@@ -376,6 +376,25 @@ staging         master@sha1:569d9b99    False           True    Applied revision
 S😎MESH[Personal_github]~$ cd ..
 S😎MESH[Personal_github]~$ cd flux-staging
 
+echo "image:
+    tag: 2.9.9
+ingress:
+    host: staging.devops-toolkit.$INGRESS_HOST.nip.io" \
+    | tee values.yaml
+
+flux create helmrelease \
+    devops-toolkit-staging \
+    --source GitRepository/devops-toolkit \
+    --values values.yaml \
+    --chart "helm" \
+    --target-namespace staging \
+    --interval 30s \
+    --export \
+    | tee apps/devops-toolkit.yaml
+```
+
+> Results:
+```
 S😎MESH[flux-staging (master)]~$ export INGRESS_HOST=192.168.20.22
 
 S😎MESH[flux-staging (master)]~$ echo "image:
@@ -504,4 +523,106 @@ staging-devops-toolkit-staging-devops-toolkit-76b6cb8665-dz2dn   1/1     Running
 S😎MESH[flux-staging (master)]~$ k describe pod staging-devops-toolkit-staging-devops-toolkit-76b6cb8665-dz2dn -n staging |grep Image
     Image:          vfarcic/devops-toolkit-series:2.9.17
     Image ID:       docker-pullable://vfarcic/devops-toolkit-series@sha256:0b0ce138b002455f0620228437f220e904244c12ce088459f1703c17fa6ffa6b
+```
+
+### 15. Deploying the first release in production
+```
+S😎MESH[Personal_github]~$ cd ..
+
+S😎MESH[Personal_github]~$ cd flux-production/
+
+echo "image:
+    tag: 2.9.17
+ingress:
+    host: devops-toolkit.$INGRESS_HOST.nip.io" \
+    | tee values.yaml
+
+flux create helmrelease \
+    devops-toolkit-production \
+    --source GitRepository/devops-toolkit \
+    --values values.yaml \
+    --chart "helm" \
+    --target-namespace production \
+    --interval 30s \
+    --export \
+    | tee apps/devops-toolkit.yaml
+```
+
+> Results:
+```
+S😎MESH[flux-production (master)]~$ export INGRESS_HOST=192.168.20.22
+
+S😎MESH[flux-production (master)]~$ echo "image:
+>     tag: 2.9.17
+> ingress:
+>     host: devops-toolkit.$INGRESS_HOST.nip.io" \
+>     | tee values.yaml
+image:
+    tag: 2.9.17
+ingress:
+    host: devops-toolkit.192.168.20.22.nip.io
+
+
+S😎MESH[flux-production (master)]~$ flux create helmrelease \
+>     devops-toolkit-production \
+>     --source GitRepository/devops-toolkit \
+>     --values values.yaml \
+>     --chart "helm" \
+>     --target-namespace production \
+>     --interval 30s \
+>     --export \
+>     | tee apps/devops-toolkit.yaml
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: devops-toolkit-production
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: helm
+      reconcileStrategy: ChartVersion
+      sourceRef:
+        kind: GitRepository
+        name: devops-toolkit
+  interval: 30s
+  targetNamespace: production
+  values:
+    image:
+      tag: 2.9.17
+    ingress:
+      host: devops-toolkit.192.168.20.22.nip.io
+
+
+S😎MESH[flux-production (master)]~$ git status
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	apps/
+	values.yaml
+
+
+S😎MESH[flux-production (master)]~$ rm values.yaml
+
+S😎MESH[flux-production (master)]~$ git add .
+
+S😎MESH[flux-production (master)]~$ git commit -m "Initial commit"
+
+S😎MESH[flux-production (master)]~$ git push
+```
+
+
+### 16. Verifying the first release in staging
+```
+S😎MESH[flux-production (master)]~$ watch flux get helmreleases
+
+Every 2.0s: flux get helmreleases                                                                                                            someshp-mbp: Thu May  4 20:05:26 2023
+NAME                            REVISION        SUSPENDED       READY   MESSAGE
+devops-toolkit-production       0.1.0           False           True    Release reconciliation succeeded
+devops-toolkit-staging          0.1.0           False           True    Release reconciliation succeeded
+
+
+S😎MESH[flux-production (master)]~$ k get pods -n production
+NAME                                                              READY   STATUS    RESTARTS   AGE
+production-devops-toolkit-production-devops-toolkit-64c9d8b7vws   1/1     Running   0          2m4s
 ```
