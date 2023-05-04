@@ -612,7 +612,7 @@ S😎MESH[flux-production (master)]~$ git push
 ```
 
 
-### 16. Verifying the first release in staging
+### 16. Verifying the first release in production
 ```
 S😎MESH[flux-production (master)]~$ watch flux get helmreleases
 
